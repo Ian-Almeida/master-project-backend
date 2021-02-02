@@ -33,6 +33,7 @@ typing-extensions = "==3.7.4.3"
 uvloop = "==0.14.0"
 watchgod = "==0.6"
 websockets = "==8.1"
+pyjwt = "*"
 
 [dev-packages]
 

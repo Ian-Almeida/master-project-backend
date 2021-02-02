@@ -11,9 +11,19 @@ class UserModel(BaseModel):
     active: bool
 
     class Config:
-        pass
+        allow_population_by_field_name = True
+        schema_extra = {
+            "example": {
+                "id": "00010203-0405-0607-0809-0a0b0c0d0e0f",
+                "name": "My name",
+                "email": "myemail@email.com",
+                "password": "secretpassword123",
+                "active": True,
+            }
+        }
 
 class UserCreateModel(BaseModel):
+    id: str = Field(default_factory=uuid.uuid4, alias="_id")
     name: str = Field(...)
     email: EmailStr = Field(...)
     password: str = Field(...)

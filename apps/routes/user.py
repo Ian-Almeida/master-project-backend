@@ -11,35 +11,35 @@ from apps.models.users import UserCreateModel, UserModel, UpdateUserModel, UserL
 
 router = APIRouter()
 
-# @router.get("/")
-# async def 
+@router.get("/", response_description="Get all users")
+async def get_all_users(request: Request):
+    users = []
+    for user in await request.app.mongodb["user"].find().to_list(length=100):
+        user['password'] = ''
+        users.append(user)
+    return users
 
-@router.get("/login/{email}/{password}", response_description="Login user")
+@router.post("/login", response_description="Login user")
 async def check_user(
     request: Request,
-    email: EmailStr,
-    password: str
+    login_user: UserLogin,
 ):
     searched_user = await request.app.mongodb["user"].find_one(
-        {"email": email}
+        {"email": login_user.email}
     )
 
     if not searched_user:
-            raise HTTPException(status_code=404, detail=f"User {email} not found")
+            raise HTTPException(status_code=404, detail=f"User {login_user.email} not found")
 
     user_password = {
         'salt': searched_user['password'][:32],
         'key': searched_user['password'][32:]
     }
 
-    key = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), user_password['salt'], 100000)
+    key = hashlib.pbkdf2_hmac('sha256', login_user.password.encode('utf-8'), user_password['salt'], 100000)
 
     if key != user_password['key']:
-        return {
-            'error': 'Invalid password',
-            'status': 400,
-            'valid': False 
-        }
+        raise HTTPException(status_code=400, detail=f"Invalid login!")
     else:
         return {
             'error': None,
