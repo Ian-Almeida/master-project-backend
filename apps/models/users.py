@@ -35,6 +35,7 @@ class UserCreateModel(BaseModel):
 class UserLogin(BaseModel):
     email: EmailStr = Field(...)
     password: str = Field(...)
+    isAuthUser: bool
 
 class UpdateUserModel(BaseModel):
     name: Optional[str]

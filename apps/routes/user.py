@@ -24,28 +24,31 @@ async def check_user(
     request: Request,
     login_user: UserLogin,
 ):
-    searched_user = await request.app.mongodb["user"].find_one(
+    searched_user = await request.app.mongodb["user"].find(
         {"email": login_user.email}
-    )
+    ).to_list(length=100)
 
     if not searched_user:
             raise HTTPException(status_code=404, detail=f"User {login_user.email} not found")
 
     user_password = {
-        'salt': searched_user['password'][:32],
-        'key': searched_user['password'][32:]
+        'salt': searched_user[0]['password'][:32],
+        'key': searched_user[0]['password'][32:]
     }
 
     key = hashlib.pbkdf2_hmac('sha256', login_user.password.encode('utf-8'), user_password['salt'], 100000)
-
+    del searched_user[0]['password']
     if key != user_password['key']:
         raise HTTPException(status_code=400, detail=f"Invalid login!")
     else:
-        return {
+        return [{
+            'data': searched_user,
+            'isAuthUser': True,
             'error': None,
             'status': 200,
-            'valid': True
-        }
+            'valid': True,
+            'authKey': signJWT(searched_user[0]["email"])
+        }]
 
 @router.post("/signup", response_description="Create user")
 async def create_user(
