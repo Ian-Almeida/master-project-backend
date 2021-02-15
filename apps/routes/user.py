@@ -38,6 +38,7 @@ async def check_user(
 
     key = hashlib.pbkdf2_hmac('sha256', login_user.password.encode('utf-8'), user_password['salt'], 100000)
     del searched_user[0]['password']
+    
     if key != user_password['key']:
         raise HTTPException(status_code=400, detail=f"Invalid login!")
     else:
@@ -67,10 +68,14 @@ async def create_user(
     if not searched_user:
         user = jsonable_encoder(user)
         user['password'] = hashed_password
-        new_user = await request.app.mongodb["user"].insert_one(user)
-        created_user = await request.app.mongodb["user"].find_one(
-            {"_id": new_user.inserted_id}
-        )
-        return signJWT(user["email"])
+
+        await request.app.mongodb["user"].insert_one(user)
+        created_user = await request.app.mongodb["user"].find(
+            {"email": user['email']}
+        ).to_list(length=100)
+        created_user[0]['token'] = signJWT(created_user[0]['_id'])
+        del created_user[0]['password']
+
+        return [created_user[0]]
     else:
         raise HTTPException(status_code=400, detail=f"User {searched_user['email']} already exists")
