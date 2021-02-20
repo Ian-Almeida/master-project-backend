@@ -1,2 +1,2 @@
 run:
-  web: uvicorn main:app --reload --host 0.0.0.0 --port 8000
+  web: uvicorn main:app --reload --host 0.0.0.0 --port $PORT
