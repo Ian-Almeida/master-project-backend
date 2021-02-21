@@ -48,7 +48,7 @@ async def check_user(
             'error': None,
             'status': 200,
             'valid': True,
-            'authKey': signJWT(searched_user[0]["email"])
+            'authKey': signJWT(searched_user[0]['_id'])
         }]
 
 @router.post("/signup", response_description="Create user")
